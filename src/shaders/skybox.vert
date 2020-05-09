@@ -1,8 +1,13 @@
-#version 120
-varying vec3 tex_coords;
+#version 330 core
+layout (location = 0) in vec3 aPos;
+
+out vec3 TexCoords;
+
+uniform mat4 projection;
+uniform mat4 view;
 
 void main()
 {
-    gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * gl_Vertex;
-    tex_coords = vec3(gl_Vertex) * vec3(1, 1, -1);
-}
+    TexCoords = aPos;
+    gl_Position = projection * view * vec4(aPos, 1.0);
+}  

@@ -1,50 +1,38 @@
-import pygame
-import sys
-import time
 import glob
 import numpy as np
-from ctypes import *
-from OpenGL.GL import *
+import OpenGL.GL as GL
 from OpenGL.GL import shaders
-from OpenGL.GLU import *
 from PIL import Image
 
 class Skybox:
 
-    def load_shaders(self, vert_url, frag_url):
-        vert_str = "\n".join(open(vert_url).readlines())
-        frag_str = "\n".join(open(frag_url).readlines())
-        vert_shader = shaders.compileShader(vert_str, GL_VERTEX_SHADER)
-        frag_shader = shaders.compileShader(frag_str, GL_FRAGMENT_SHADER)
-        program = shaders.compileProgram(vert_shader, frag_shader)
-        return program
+    def __init__(self, shader, folder_url, width=1280, height=720):
 
-    def load_cubemap(self, folder_url):
-        tex_id = glGenTextures(1)
+        # define width and height
+        self.width = width
+        self.height = height
+
+        # load skybox shaders
+        self.skybox_shaders = shader
+
+        # load skybox cubemap texture
+        self.skybox_texture = GL.glGenTextures(1)
         face_order = ["right", "left", "top", "bottom", "back", "front"]
         face_urls = sorted(glob.glob(folder_url + "*"))
-        glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_CUBE_MAP, tex_id)
+        GL.glActiveTexture(GL.GL_TEXTURE0)
+        GL.glBindTexture(GL.GL_TEXTURE_CUBE_MAP, self.skybox_texture)
         for i, face in enumerate(face_order):
             face_url = [face_url for face_url in face_urls if face in face_url.lower()][0]
             face_surface = np.asarray(Image.open(face_url).convert('RGB'))
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, 1024, 1024, 0, GL_RGB,GL_UNSIGNED_BYTE, face_surface)
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE)
-        glBindTexture(GL_TEXTURE_CUBE_MAP, 0)
-        return tex_id
+            GL.glTexImage2D(GL.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL.GL_RGB, 1024, 1024, 0, GL.GL_RGB, GL.GL_UNSIGNED_BYTE, face_surface)
+        GL.glTexParameteri(GL.GL_TEXTURE_CUBE_MAP, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
+        GL.glTexParameteri(GL.GL_TEXTURE_CUBE_MAP, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
+        GL.glTexParameteri(GL.GL_TEXTURE_CUBE_MAP, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE)
+        GL.glTexParameteri(GL.GL_TEXTURE_CUBE_MAP, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE)
+        GL.glTexParameteri(GL.GL_TEXTURE_CUBE_MAP, GL.GL_TEXTURE_WRAP_R, GL.GL_CLAMP_TO_EDGE)
+        GL.glBindTexture(GL.GL_TEXTURE_CUBE_MAP, 0)
 
-    def render(self):
-        global width, height, program, cubemap
-        global rotation_x, rotation_y, fov
-
-        glEnable(GL_DEPTH_TEST)
-        glEnable(GL_TEXTURE_2D)
-        glEnable(GL_TEXTURE_CUBE_MAP)
-
+        # define skybox vertices
         skybox_right = [1, -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, 1, -1, -1]
         skybox_left = [-1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, -1, -1, 1, 1, -1, -1, 1]
         skybox_top = [-1, 1, -1, 1, 1, -1, 1, 1, 1, 1, 1, 1, -1, 1, 1, -1, 1, -1]
@@ -52,90 +40,40 @@ class Skybox:
         skybox_back = [-1, 1, -1, -1, -1, -1, 1, -1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1]
         skybox_front = [-1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, 1, -1, -1, 1]
 
-        skybox_vertices = np.array([skybox_right, skybox_left, skybox_top, skybox_bottom, skybox_back, skybox_front],
-                                   dtype=np.float32).flatten()
-        skybox_vbo = glGenBuffers(1)
-        glBindBuffer(GL_ARRAY_BUFFER, skybox_vbo)
-        glBufferData(GL_ARRAY_BUFFER, skybox_vertices.nbytes, skybox_vertices, GL_STATIC_DRAW)
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        skybox_vertices = np.array([skybox_right, skybox_left, skybox_top, skybox_bottom, skybox_back, skybox_front], dtype=np.float32).flatten()
 
-        glClear(GL_COLOR_BUFFER_BIT)
-        glClear(GL_DEPTH_BUFFER_BIT)
+        # create vertex array object, bind it
+        self.glid = GL.glGenVertexArrays(1)
+        GL.glBindVertexArray(self.glid)
 
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        gluPerspective(fov, float(width) / height, 0.1, 1000)
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        glRotate(rotation_y, 1, 0, 0)
-        glRotate(rotation_x, 0, 1, 0)
+        # create new vbo
+        self.skybox_vbo = GL.glGenBuffers(1)
+        GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.skybox_vbo)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, skybox_vertices.nbytes, skybox_vertices, GL.GL_STATIC_DRAW)
+        GL.glEnableVertexAttribArray(0)
+        GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, False, 0, None)
+        GL.glBindVertexArray(self.glid)
 
-        glUseProgram(program)
-        glDepthMask(GL_FALSE)
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap)
-        glEnableClientState(GL_VERTEX_ARRAY)
-        glBindBuffer(GL_ARRAY_BUFFER, skybox_vbo)
-        glVertexPointer(3, GL_FLOAT, 0, None)
-        glDrawArrays(GL_TRIANGLES, 0, 36)
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-        glDisableClientState(GL_VERTEX_ARRAY)
-        glBindTexture(GL_TEXTURE_CUBE_MAP, 0)
-        glDepthMask(GL_TRUE)
-        glUseProgram(0)
+        # Get Uniform location of shader program
+        names = ['view', 'projection', 'model']
+        self.loc = {n: GL.glGetUniformLocation(self.skybox_shaders.glid, n) for n in names}
+    
+    def draw(self, projection, view, model):   
 
-        pygame.display.flip()
+        # change depth functions 
+        GL.glDepthFunc(GL.GL_LEQUAL)
 
-if __name__ == "__main__":
-    title = "Skybox Demo"
-    target_fps = 60
-    (width, height) = (800, 600)
-    flags = pygame.DOUBLEBUF | pygame.OPENGL
-    screen = pygame.display.set_mode((width, height), flags)
-    prev_time = time.time()
-    rotation_x = 0
-    rotation_y = 0
-    rotation_step = 1
-    skybox = Skybox()
-    cubemap = skybox.load_cubemap("./assets/skybox/underwater/")
-    program = skybox.load_shaders("./shaders/skybox.vert", "./shaders/skybox.frag")
+        GL.glUseProgram(self.skybox_shaders.glid)
 
-    moving = [False, False, False, False]
-    arrows = [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN]
-    fov = 60
-    fov_step = 10
-    fov_range = (30, 150)
+        GL.glUniformMatrix4fv(self.loc['view'], 1, True, view)
+        GL.glUniformMatrix4fv(self.loc['projection'], 1, True, projection)
+        GL.glUniformMatrix4fv(self.loc['model'], 1, True, model)
 
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
-            elif event.type == pygame.KEYDOWN:
-                try:
-                    moving[arrows.index(event.key)] = True
-                except:
-                    pass
-                if event.key == pygame.K_SPACE:
-                    fov += fov_step
-                    fov_min, fov_max = fov_range
-                    if fov > fov_max:
-                        fov = fov_min
-            elif event.type == pygame.KEYUP:
-                try:
-                    moving[arrows.index(event.key)] = False
-                except:
-                    pass
-
-        rotation_x += rotation_step * (moving[1] - moving[0])
-        rotation_x %= 360
-        rotation_y += rotation_step * (moving[3] - moving[2])
-        rotation_y %= 360
-        skybox.render()
-
-        curr_time = time.time()
-        diff = curr_time - prev_time
-        delay = max(1.0 / target_fps - diff, 0)
-        time.sleep(delay)
-        fps = 1.0 / (delay + diff)
-        prev_time = curr_time
-        pygame.display.set_caption(
-            "{0}, FPS: {1:.0f} Yaw: {2}, Pitch: {3}, FOV: {4}".format(title, fps, rotation_x, rotation_y, fov))
+        # skybox cube
+        GL.glBindVertexArray(self.glid)
+        GL.glActiveTexture(GL.GL_TEXTURE0)
+        GL.glUniform1i(GL.glGetUniformLocation(self.skybox_shaders.glid, "skybox"), 0)
+        GL.glBindTexture(GL.GL_TEXTURE_CUBE_MAP, self.skybox_texture)
+        GL.glDrawArrays(GL.GL_TRIANGLES, 0, 36)
+        GL.glBindVertexArray(0)
+        GL.glDepthFunc(GL.GL_LESS)
