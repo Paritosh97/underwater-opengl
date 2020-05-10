@@ -11,6 +11,6 @@ out vec2 frag_uv;
 
 void main () {
     gl_Position = projection * view * model * vec4 (position, 1);
-    frag_uv = vec2(uvs.x,uvs.y);
+    frag_uv = vec2(uvs.x,1-uvs.y);
     frag_tex_coords = position.xy;
 }

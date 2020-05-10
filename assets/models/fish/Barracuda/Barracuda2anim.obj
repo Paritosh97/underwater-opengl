@@ -1,6 +1,7 @@
 # Blender v2.78 (sub 0) OBJ File: 'Barracuda2anim.blend'
 # www.blender.org
 mtllib Barracuda2anim.mtl
+usemtl aqua
 o Plane
 v -0.020622 1.134985 0.330030
 v -0.103375 0.346134 1.569797

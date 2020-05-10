@@ -47,7 +47,7 @@ from skybox import Skybox
 # import viewer
 from viewer import Viewer
 
-from model import load_textured, load, load_phong_mesh
+from model import Model
 
 # -------------- main program and scene setup --------------------------------
 def main():
@@ -121,12 +121,14 @@ def main():
     viewer.add(*[m for file in src for m in load_textured(file, shader, texFile)])
     """
 
-    
-    # set skybox
+    # environment node
     environment = Node()
+
+    """
+    # set skybox
     shader = Shader("./shaders/skybox.vert", "./shaders/skybox.frag")    
     environment.add(Skybox(shader, "./../assets/skybox/underwater/"))
-
+    
     # set seabed
     shader = Shader("./shaders/texture.vert", "./shaders/texture.frag")
     src = ['./../assets/models/seabed/seabed.fbx']
@@ -134,7 +136,7 @@ def main():
     seabed = Node(transform=scale(0.008, 0.01, 0.008) @ translate(0, -100, 0))
     seabed.add(*[m for file in src for m in load_textured(file, shader, texFile)])
 
-    """
+    
     # add plants
     shader = Shader("./shaders/phong.vert", "./shaders/phong.frag")
     src = ['./../assets/models/plants/coral/coral.obj']
@@ -145,16 +147,23 @@ def main():
     seabed.add(plants)
     """
 
+    # add water
+
 
     # add fish models
-    #shader = Shader("./shaders/texture.vert", "./shaders/texture.frag")
+    shader = Shader("./shaders/phong_texture_skinning.vert", "./shaders/phong_texture_skinning.frag")
+    fishes = Node()
+    src = './../assets/models/fish/Barracuda/Barracuda2anim.fbx'
+    texFile = './../assets/models/fish/Barracuda/Barraccuda_Normal.png'
+    mtlFile = './../assets/models/fish/Barracuda/Barracuda2anim.mtl'
 
+    model = Model(src, shader)
     
-
-    environment.add(seabed)
+    for m in model.load_phong_textured_skinned(texFile, mtlFile):
+        fishes.add(m)
     
-
-
+    environment.add(fishes)
+    
     scene = Node()
     scene.add(environment)
 
