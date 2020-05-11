@@ -52,8 +52,6 @@ from model import Model
 
 from fishanimation import FishAnimation
 
-from particles import Particles
-
 # -------------- main program and scene setup --------------------------------
 def main():
     """ create a window, add scene objects, then run rendering loop """
@@ -61,12 +59,10 @@ def main():
     
     # environment node
     environment = Node()
-
     
     # set skybox
     shader = Shader("./shaders/skybox.vert", "./shaders/skybox.frag")    
     environment.add(Skybox(shader, "./../assets/skybox/underwater/"))
-    
     
     # set seabed
     shader = Shader("./shaders/texture.vert", "./shaders/texture.frag")
@@ -104,11 +100,10 @@ def main():
     plants.add(seaweed)
 
     # add coral
+    coral_count = 5
     src = './../assets/models/plants/coral/coral.obj'
-    
     texFile = './../assets/models/plants/coral/coral.jpg'
     coral = Node(transform=scale(0.1, 0.1, 0.1))
-    coral_count = 5
     for i in range(coral_count):
         model = Model(src, shader)
         temp = Node(transform=translate(randrange(-300, 300), 350, randrange(-300, -100)))
@@ -128,9 +123,9 @@ def main():
     shader = Shader("./shaders/phong_texture_skinning.vert", "./shaders/phong_texture_skinning.frag")        
 
     fishes = []
-    fish_count = 20
+    fish_count = 10
     
-    for i in range(0, fish_count):
+    for i in range(0, fish_count+1):
         model = Model(src, shader)
         fish_no = randint(1, 24)
         src = './../assets/models/fish/%d/model.fbx' % fish_no
@@ -146,17 +141,12 @@ def main():
     for fish in fishes:
         environment.add(fish)
     
-
-    # add bubbles
-    shader = Shader("./shaders/particle.vert", "./shaders/particle.frag")  
-    
-
-    # add water
-    
     scene = Node()
     scene.add(environment)
 
     viewer.add(scene)
+
+    print("Controls : Use the mouse to change the scene view. Press spacebar to restart the scene animations. Press W to see polygons and ESC or Q to Quit.")
 
     # start rendering loop
     viewer.run()
