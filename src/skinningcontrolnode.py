@@ -14,7 +14,11 @@ class SkinningControlNode(Node):
     def draw(self, projection, view, model):
         """ When redraw requested, interpolate our node transform from keys """
         if self.keyframes:  # no keyframe update should happens if no keyframes
-            self.transform = self.keyframes.value(get_time())
+            # loop through animations
+            time = get_time()%self.keyframes.translate_keys.times[-1]
+            self.transform = self.keyframes.value(time)
+            
+            
 
         # store world transform for skinned meshes using this node as bone
         self.world_transform = model @ self.transform

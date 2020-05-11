@@ -1,7 +1,6 @@
 import glob
 import numpy as np
 import OpenGL.GL as GL
-from OpenGL.GL import shaders
 from PIL import Image
 
 class Skybox:
@@ -58,7 +57,7 @@ class Skybox:
         names = ['view', 'projection', 'model']
         self.loc = {n: GL.glGetUniformLocation(self.skybox_shaders.glid, n) for n in names}
     
-    def draw(self, projection, view, model):   
+    def draw(self, projection, view, model):
 
         # change depth functions 
         GL.glDepthFunc(GL.GL_LEQUAL)

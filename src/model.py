@@ -34,7 +34,7 @@ class Model:
         return meshes
 
 
-    def load_phong(self, light_dir):
+    def load_phong(self, light_dir = (0, 1, 0)):
 
         # prepare mesh nodes
         meshes = []
@@ -146,7 +146,7 @@ class Model:
         return [root_node]
 
 
-    def load_phong_textured_skinned(self, tex_file=None, light_dir=None):
+    def load_phong_textured_skinned(self, tex_file=None, light_dir=(0, 1, 0)):
 
         # Note: embedded textures not supported at the moment
         path = os.path.dirname(self.file) if os.path.dirname(self.file) != '' else './'
@@ -217,13 +217,13 @@ class Model:
             bone_nodes = [nodes[bone.mName] for bone in mesh.mBones]
             bone_offsets = [bone.mOffsetMatrix for bone in mesh.mBones]
 
-            # Texture 
+            # Initialize mat for phong and texture 
             mat = self.scene.mMaterials[mesh.mMaterialIndex].properties
             assert mat['diffuse_map'], "Trying to map using a textureless material"
 
             # initialize skinned mesh and store in assimp mesh for node addition
             attrib = [mesh.mVertices, mesh.mNormals, v_bone['id'], v_bone['weight'], mesh.mTextureCoords[0]]
-            mesh = PhongTexturedSkinnedMesh(self.shader, attrib, bone_nodes, bone_offsets, mat['diffuse_map'], mesh.mFaces)
+            mesh = PhongTexturedSkinnedMesh(self.shader, attrib, bone_nodes, bone_offsets, mat['diffuse_map'], mesh.mFaces, k_d=mat.get('COLOR_DIFFUSE', (1, 1, 1)), k_s=mat.get('COLOR_SPECULAR', (1, 1, 1)), k_a=mat.get('COLOR_AMBIENT', (0, 0, 0)), s=mat.get('SHININESS', 16.), light_dir=light_dir)
 
             for node in nodes_per_mesh_id[mesh_id]:
                 node.add(mesh)
@@ -232,31 +232,3 @@ class Model:
         print('Loaded', self.file, '\t(%d meshes, %d faces, %d nodes, %d animations)' % (self.scene.mNumMeshes, nb_triangles, len(nodes), self.scene.mNumAnimations))
 
         return [root_node]
-
-
-# -------------- 3D resource loader -----------------------------------------
-def load_phong_mesh(file, shader, light_dir):
-    """ load resources from file using assimp, return list of ColorMesh """
-    try:
-        pp = assimpcy.aiPostProcessSteps
-        flags = pp.aiProcess_Triangulate | pp.aiProcess_GenSmoothNormals
-        scene = assimpcy.aiImportFile(file, flags)
-    except assimpcy.all.AssimpError as exception:
-        print('ERROR loading', file + ': ', exception.args[0].decode())
-        return []
-
-    # prepare mesh nodes
-    meshes = []
-    for mesh in scene.mMeshes:
-        mat = scene.mMaterials[mesh.mMaterialIndex].properties
-        mesh = PhongMesh(shader, [mesh.mVertices, mesh.mNormals], mesh.mFaces,
-                         k_d=mat.get('COLOR_DIFFUSE', (1, 1, 1)),
-                         k_s=mat.get('COLOR_SPECULAR', (1, 1, 1)),
-                         k_a=mat.get('COLOR_AMBIENT', (0, 0, 0)),
-                         s=mat.get('SHININESS', 16.),
-                         light_dir=light_dir)
-        meshes.append(mesh)
-
-    size = sum((mesh.mNumFaces for mesh in scene.mMeshes))
-    print('Loaded %s\t(%d meshes, %d faces)' % (file, len(meshes), size))
-    return meshes
