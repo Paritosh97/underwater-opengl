@@ -60,6 +60,7 @@ class Skybox:
     def draw(self, projection, view, model):
 
         # change depth functions 
+        GL.glDepthMask(GL.GL_FALSE)
         GL.glDepthFunc(GL.GL_LEQUAL)
 
         GL.glUseProgram(self.skybox_shaders.glid)
@@ -76,3 +77,9 @@ class Skybox:
         GL.glDrawArrays(GL.GL_TRIANGLES, 0, 36)
         GL.glBindVertexArray(0)
         GL.glDepthFunc(GL.GL_LESS)
+
+        GL.glDepthMask(GL.GL_TRUE)
+
+        # leave clean state for easier debugging
+        GL.glBindTexture(GL.GL_TEXTURE_CUBE_MAP, 0)
+        GL.glUseProgram(0)

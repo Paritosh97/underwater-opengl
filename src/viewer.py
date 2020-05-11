@@ -3,7 +3,8 @@ import glfw
 import OpenGL.GL as GL
 from glfwtrackball import GLFWTrackball
 from itertools import cycle
-from transform import identity
+from transform import identity, translate
+import math
 
 class Viewer(Node):
     """ GLFW viewer window, with classic initialization & graphics loop """
@@ -69,5 +70,4 @@ class Viewer(Node):
                 GL.glPolygonMode(GL.GL_FRONT_AND_BACK, next(self.fill_modes))
             if key == glfw.KEY_SPACE:
                 glfw.set_time(0)
-
             self.key_handler(key)

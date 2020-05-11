@@ -9,7 +9,7 @@ import os                           # os function, i.e. checking file status
 import glob
 from random import randrange, randint
 # External, non built-in modules
-from glfw import init, terminate
+from glfw import init, terminate, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT
 import numpy as np                  # all matrix manipulations & OpenGL args
 import assimpcy                     # 3D resource loader
 
@@ -18,29 +18,11 @@ from transform import translate, scale, rotate, vec, quaternion, quaternion_from
 # import Shader
 from shader import Shader
 
-# import VertexArray
-from vertexarray import VertexArray
-
 # import Node
 from node import Node
 
-# import Mesh
-from mesh import Mesh
-
-# import texture
-from texture import Texture
-
-# import texturedmesh
-from texturedmesh import TexturedMesh
-
 # import KeyframeControlNode
 from keyframecontrolnode import KeyFrameControlNode
-
-# import SkinnedMesh
-from skinnedmesh import SkinnedMesh
-
-# import SkinnedControlNode
-from skinningcontrolnode import SkinningControlNode
 
 # import Skybox
 from skybox import Skybox
@@ -48,9 +30,13 @@ from skybox import Skybox
 # import viewer
 from viewer import Viewer
 
+# import Model
 from model import Model
 
+# import FishAnimation
 from fishanimation import FishAnimation
+
+from controlnode import ControlNode
 
 # -------------- main program and scene setup --------------------------------
 def main():
@@ -70,7 +56,7 @@ def main():
     texFile = './../assets/models/seabed/seabed.jpg'
     seabed = Node(transform=scale(0.008, 0.01, 0.008) @ translate(0, -100, 0))
     model = Model(src, shader)
-    for m in model.load_textured(texFile):
+    for m in model.load_phong_textured_skinned(texFile):
         seabed.add(m)
     
     # plants node
@@ -81,7 +67,7 @@ def main():
     src = './../assets/models/plants/seaweed/seaweed.fbx'
     texFile = './../assets/models/plants/seaweed/seaweed.png'    
     seaweed = Node(transform=scale(2, 2, 2))
-    seaweed_density = 40
+    seaweed_density = 80
     for i in range(seaweed_density):
         model = Model(src, shader)
         temp = Node(transform=translate(randrange(-50, 50), 3.5, randrange(-50, 50)))
@@ -100,7 +86,7 @@ def main():
     plants.add(seaweed)
 
     # add coral
-    coral_count = 5
+    coral_count = 7
     src = './../assets/models/plants/coral/coral.obj'
     texFile = './../assets/models/plants/coral/coral.jpg'
     coral = Node(transform=scale(0.1, 0.1, 0.1))
@@ -123,14 +109,26 @@ def main():
     shader = Shader("./shaders/phong_texture_skinning.vert", "./shaders/phong_texture_skinning.frag")        
 
     fishes = []
-    fish_count = 10
+    fish_count = 20
+
+    fish_no = randint(1, 24)
+    src = './../assets/models/fish/%d/model.fbx' % fish_no
+    texFile = './../assets/models/fish/%d/texture.png' % fish_no
+    fish = Node(transform=scale(0.0001, 0.0001, 0.0001))
+    model = Model(src, shader)
+    control_node = ControlNode(KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, 30)
+    for m in model.load_phong_textured_skinned(texFile):
+        control_node.add(m)
     
-    for i in range(0, fish_count+1):
-        model = Model(src, shader)
+    fish.add(control_node)
+    fishes.append(fish)
+
+    for i in range(0, fish_count+1):        
         fish_no = randint(1, 24)
         src = './../assets/models/fish/%d/model.fbx' % fish_no
         texFile = './../assets/models/fish/%d/texture.png' % fish_no
         fish = Node(transform=scale(0.0001, 0.0001, 0.0001))
+        model = Model(src, shader)
         for m in model.load_phong_textured_skinned(texFile):
             fish.add(m)
         fishanimation = FishAnimation()

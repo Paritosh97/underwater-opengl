@@ -55,7 +55,11 @@ Paritosh Sharma
 
   
 
-- 24 randomly placed and animated fish models
+- 24 randomly placed and animated fish models with texture and phong shading
+
+
+
+- User controllable fish 
 
   
 
