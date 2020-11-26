@@ -14,7 +14,6 @@ layout(location = 3) in vec4 bone_weights;
 layout(location = 4) in vec2 uvs;
 
 // ----- interpolated attribute variables to be passed to fragment shader
-out vec2 frag_tex_coords;
 out vec2 frag_uv;
 
 // position and normal for the fragment shader, in WORLD coordinates
@@ -33,7 +32,6 @@ void main()
     gl_Position = projection * view * wPosition4;
 
     frag_uv = vec2(uvs.x,1-uvs.y);
-    frag_tex_coords = position.xy;
     
     // fragment position in world coordinates
     w_position = wPosition4.xyz / wPosition4.w;  // dehomogenize

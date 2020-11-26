@@ -23,9 +23,14 @@ void main() {
     vec3 l = normalize(-light_dir);
     vec3 v = normalize(w_camera_position - w_position);
     vec3 r = reflect(-l, n);
+    float diff = max(dot(n, l), 0.0);
+    float spec = pow(max(dot(v, r), 0.0), s);
 
-    vec3 diffuse_color = k_d * max(dot(n, l), 0);
-    vec3 specular_color = k_s * pow(max(dot(r, v), 0), s);
+    vec3 ambient_color = k_a * vec3(texture(diffuse_map, frag_uv));
+    vec3 diffuse_color = k_d * diff * vec3(texture(diffuse_map, frag_uv));
+    vec3 specular_color = k_s * spec * vec3(texture(diffuse_map, frag_uv));
 
-    outColor = texture(diffuse_map, frag_uv) + vec4(k_a, 1) + vec4(diffuse_color, 1) + vec4(specular_color, 1);
+    vec3 result = ambient_color + diffuse_color + specular_color;
+
+    outColor = vec4(result, 1);
 }

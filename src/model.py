@@ -223,7 +223,7 @@ class Model:
 
             # initialize skinned mesh and store in assimp mesh for node addition
             attrib = [mesh.mVertices, mesh.mNormals, v_bone['id'], v_bone['weight'], mesh.mTextureCoords[0]]
-            mesh = PhongTexturedSkinnedMesh(self.shader, attrib, bone_nodes, bone_offsets, mat['diffuse_map'], mesh.mFaces, k_d=mat.get('COLOR_DIFFUSE', (1, 1, 1)), k_s=mat.get('COLOR_SPECULAR', (1, 1, 1)), k_a=mat.get('COLOR_AMBIENT', (0, 0, 0)), s=mat.get('SHININESS', 16.), light_dir=light_dir)
+            mesh = PhongTexturedSkinnedMesh(self.shader, attrib, bone_nodes, bone_offsets, mat['diffuse_map'], mesh.mFaces, k_d=mat.get('COLOR_DIFFUSE', (0.8, 0.8, 0.8)), k_s=mat.get('COLOR_SPECULAR', (0.6, 0.6, 0.6)), k_a=mat.get('COLOR_AMBIENT', (0.4, 0.4, 0.4)), s=mat.get('SHININESS', 1.0), light_dir=light_dir)
 
             for node in nodes_per_mesh_id[mesh_id]:
                 node.add(mesh)
